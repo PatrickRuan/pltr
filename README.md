@@ -1,16 +1,111 @@
-# React + Vite
+# 本體論工作台
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> Palantir 做的那件事，親手做一遍。
 
-Currently, two official plugins are available:
+一份給新人的闖關式教材。目標不是讓人「看懂 Palantir 的簡報」，而是讓人**親手做完那件工作**，
+然後自己判斷裡面哪一塊是紀律、哪一塊是產品、哪一塊是位置。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 為什麼要重做
 
-## React Compiler
+多數 Palantir 介紹（包含這個 repo 的前一版）展示的是本體論**做完之後**長什麼樣子：
+漂亮的圖、一鍵決策、寫回成功的綠色勾勾。但價值全部產生在**做的過程**裡，
+而那個過程被跳過了 —— 沒有髒資料、沒有實體解析、資源不會不夠、寫回不會失敗。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+這一版把跳過的部分補回來，並且把重量放在真正耗時的前三關。
 
-## Expanding the Oxlint configuration
+## 七個關卡
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| # | 關卡 | 學員要做的事 |
+|---|------|-------------|
+| 1 | 原始混亂 | 讀五份互相矛盾的資料，回答「這裡有幾個客戶」——並答錯 |
+| 2 | 定義物件 | 決定每個欄位屬於哪個物件、誰是身分誰是屬性 |
+| 3 | 實體解析 | 手動判斷每組配對，再跟四種自動化方法比分數 |
+| 4 | 建立關聯 | 切換「解析前／解析後」，看圖從碎的變成連通的 |
+| 5 | 約束傳播 | 在有限資源下做決策，看代價沿著圖傳到別的客戶身上 |
+| 6 | 動作與寫回 | 撞上權限、樂觀鎖衝突、逾時、部分成功後的補償回滾 |
+| 7 | 總結對照 | 兩份資料集並排，看同一條流水線在兩個世界的難度差 |
+
+每一關的設計原則是**先讓學員撞牆，再給工具**。所有「對答案」都鎖在作答之後。
+
+## 兩份資料集
+
+同一條流水線，跑兩次：
+
+- **跨國半導體供應鏈** — SAP、Salesforce、IoT Hub、船舶 API。難處是**對齊**：
+  同一個東西在四個系統有四個名字，而且有一組陷阱（語意完全等價但法人不同）。
+- **台灣中小企業** — 原廠倒閉的進銷存、老闆的 Excel、LINE 群組、手寫單 OCR、財政部電子發票。
+  難處是**存在**：最重要的約束（產能、口頭改單、規格變更）根本沒被任何系統記錄過。
+
+落差本身就是教材的重點。
+
+> 所有公司名稱、統一編號、金額、對話與事件均為教學杜撰，與任何真實企業無關。
+> 本專案與 Palantir Technologies 無任何關聯。
+
+## 哪些東西是真的在跑
+
+這很重要，因為前一版的「模擬」是寫死的字串。
+
+| 檔案 | 內容 | 真的跑嗎 |
+|------|------|---------|
+| `src/engine/text.js` | 全形轉半形、公司後綴正規化、Levenshtein、bigram Dice | ✅ 真演算法 |
+| `src/engine/resolvers.js` | 完全比對／模糊比對／主鍵優先 + 混淆矩陣評分 | ✅ 真演算法 |
+| `src/engine/resolvers.js` | `modelResolver`（模型判斷） | ⚠️ 預錄結果，見下 |
+| `src/engine/constraints.js` | 資源配置、成本函數、2ⁿ 窮舉最佳解 | ✅ 真計算 |
+| `src/engine/writeback.js` | 權限檢查、樂觀鎖、逾時、補償回滾、稽核軌跡 | ✅ 真狀態機 |
+
+畫面上每一個分數與金額都是當場算出來的，沒有一個是預先寫好的數字。
+
+### 關於「模型判斷」那一欄
+
+為了讓這份教材能**零金鑰、純靜態部署**，`modelResolver` 目前讀取每組配對上預先錄製的
+`modelVerdict`，不會即時呼叫 LLM。錄製的內容刻意包含模型真實會犯的錯誤型態
+（被語意等價誤導、過度自信的合併、附上很有說服力但錯誤的理由），不是照抄答案。
+UI 上有明確標示這一點。
+
+要接真 API：替換 `modelResolver.run`，維持相同介面即可，其餘程式碼不用動。
+
+```js
+run(pair) {
+  return { match: boolean, confidence: number, rationale: string };
+}
+```
+
+## 開發
+
+```bash
+npm install
+```
+
+```bash
+npm run dev
+```
+
+```bash
+npm run build
+```
+
+```bash
+npm run lint
+```
+
+部署到 GitHub Pages：
+
+```bash
+npm run deploy
+```
+
+## 加自己的資料集
+
+複製 `src/data/twSme.js` 的結構，然後在 `src/data/index.js` 的 `DATASETS` 裡註冊。
+七個關卡會自動套用，不需要改任何 UI 程式碼。一份資料集需要提供：
+
+- `sources` — 原始髒資料（`table` / `chat` / `ocr` 三種呈現格式）與每份的 `defects`
+- `objectTypes` + `modelingFields` — Stage 2 的建模題目與正解
+- `resolution.records` / `resolution.pairs` — Stage 3 的配對與 ground truth
+- `graph` — Stage 4 的節點座標與連線
+- `scenario` — Stage 5 的資源、需求、可選方案（引擎會自己算最佳解）
+- `roles` + `actions` — Stage 6 的權限模型與寫回步驟
+- `debrief` — Stage 7 的重點
+
+想拿真實企業的資料練習，這是入口。建議先做的一件事是**把統一編號補進客戶主檔** ——
+理由在 Stage 3 和 Stage 7 有完整說明。
