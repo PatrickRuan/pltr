@@ -297,7 +297,7 @@ export default function StageResolve({ ds, onNext }) {
         </div>
       )}
 
-      <NextButton onClick={onNext} disabled={!judged} hint={judged ? '' : '先完成判斷與對答案'} label="下一關：建立關聯" />
+      <NextButton onClick={onNext} disabled={!judged} hint={judged ? '' : '先完成判斷與對答案'} label="下一關：為什麼這件事困難" />
     </div>
   );
 }

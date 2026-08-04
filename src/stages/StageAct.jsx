@@ -206,7 +206,7 @@ export default function StageAct({ ds, onNext }) {
         </Lesson>
       )}
 
-      <NextButton onClick={onNext} disabled={!anyRun} hint={anyRun ? '' : '至少執行一個動作'} label="最後一關：總結對照" />
+      <NextButton onClick={onNext} disabled={!anyRun} hint={anyRun ? '' : '至少執行一個動作'} label="最後一關：總結與卓越" />
     </div>
   );
 }

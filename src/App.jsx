@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Network, Code2 } from 'lucide-react';
+import { Network, Code2, Hammer, GraduationCap } from 'lucide-react';
 import './App.css';
 import { DATASETS, getDataset, STAGES } from './data';
 import StageRaw from './stages/StageRaw';
 import StageModel from './stages/StageModel';
 import StageResolve from './stages/StageResolve';
+import StageWhyHard from './stages/StageWhyHard';
 import StageGraph from './stages/StageGraph';
 import StageSimulate from './stages/StageSimulate';
 import StageAct from './stages/StageAct';
 import StageDebrief from './stages/StageDebrief';
+import MakingOf from './stages/MakingOf';
 
 export default function App() {
   const [dsId, setDsId] = useState(DATASETS[0].id);
   const [stage, setStage] = useState('raw');
+  const [view, setView] = useState('course'); // 'course' | 'making'
   const [furthest, setFurthest] = useState(0);
 
   const ds = getDataset(dsId);
@@ -20,7 +23,7 @@ export default function App() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [stage, dsId]);
+  }, [stage, dsId, view]);
 
   const go = (id) => {
     const i = STAGES.findIndex((s) => s.id === id);
@@ -50,22 +53,38 @@ export default function App() {
             </span>
           </div>
 
-          <div className="row" style={{ gap: 12 }}>
+          <div className="row" style={{ gap: 10 }}>
             <div className="ds-switch">
-              {DATASETS.map((d) => (
-                <button
-                  key={d.id}
-                  data-on={d.id === dsId}
-                  onClick={() => d.id !== dsId && switchDs(d.id)}
-                  style={{ background: d.id === dsId ? `${d.accent}30` : undefined }}
-                >
-                  {d.label}
-                </button>
-              ))}
+              <button data-on={view === 'course'} onClick={() => setView('course')}
+                style={{ background: view === 'course' ? 'rgba(59,130,246,.28)' : undefined }}>
+                <GraduationCap size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
+                八關教材
+              </button>
+              <button data-on={view === 'making'} onClick={() => setView('making')}
+                style={{ background: view === 'making' ? 'rgba(139,92,246,.3)' : undefined }}>
+                <Hammer size={13} style={{ verticalAlign: -2, marginRight: 5 }} />
+                如何做出來
+              </button>
             </div>
+
+            {view === 'course' && (
+              <div className="ds-switch">
+                {DATASETS.map((d) => (
+                  <button
+                    key={d.id}
+                    data-on={d.id === dsId}
+                    onClick={() => d.id !== dsId && switchDs(d.id)}
+                    style={{ background: d.id === dsId ? `${d.accent}30` : undefined }}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
+        {view === 'course' && (
         <nav className="rail">
           {STAGES.map((s, i) => (
             <button
@@ -87,9 +106,12 @@ export default function App() {
             </button>
           ))}
         </nav>
+        )}
       </header>
 
       <main className="wrap" style={{ paddingTop: 20, paddingBottom: 40, flex: 1 }}>
+        {view === 'making' ? <MakingOf /> : (
+        <>
         <div className="spread" style={{ marginBottom: 16 }}>
           <div className="row" style={{ gap: 9 }}>
             <span className="tag" style={{ background: `${ds.accent}22`, color: ds.accent, borderColor: `${ds.accent}55` }}>
@@ -110,6 +132,7 @@ export default function App() {
         {stage === 'raw' && <StageRaw key={dsId} {...props} />}
         {stage === 'model' && <StageModel key={dsId} {...props} />}
         {stage === 'resolve' && <StageResolve key={dsId} {...props} />}
+        {stage === 'whyhard' && <StageWhyHard key={dsId} {...props} />}
         {stage === 'graph' && <StageGraph key={dsId} {...props} />}
         {stage === 'simulate' && <StageSimulate key={dsId} {...props} />}
         {stage === 'act' && <StageAct key={dsId} {...props} />}
@@ -120,6 +143,8 @@ export default function App() {
             onRestart={() => { setStage('raw'); setFurthest(0); }}
             onSwitch={switchDs}
           />
+        )}
+        </>
         )}
       </main>
 
